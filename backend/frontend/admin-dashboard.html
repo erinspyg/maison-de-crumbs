@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard - Maison-De-Crumbs</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #fff8f0;
+    }
+    header {
+      background-color: #8b5e3c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #f44336;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background-color: #d32f2f;
+    }
+    .container {
+      padding: 20px;
+    }
+    h2 {
+      color: #8b5e3c;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f3e5ab;
+      color: #4e342e;
+    }
+    tr:hover {
+      background-color: #f9f1e7;
+    }
+    img {
+      border-radius: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button.action {
+      margin-right: 5px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-edit { background-color: #f8b500; color: white; }
+    .btn-delete { background-color: #e53935; color: white; }
+    form#add-product-form {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    form#add-product-form input {
+      flex: 1 1 30%;
+    }
+    form#add-product-form button {
+      background: #4caf50;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin Dashboard</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <div class="container">
+    <h2>👤 Daftar Pengguna</h2>
+    <table id="user-table">
+      <thead>
+        <tr><th>Nama</th><th>Email</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2 style="margin-top: 40px;">🍰 Daftar Produk</h2>
+    <table id="product-table">
+      <thead>
+        <tr><th>Nama Produk</th><th>Harga</th><th>Gambar</th><th>Aksi</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>➕ Tambah Produk Baru</h2>
+    <form id="add-product-form">
+      <input type="text" id="new-name" placeholder="Nama Produk" required>
+      <input type="number" id="new-price" placeholder="Harga" required>
+      <input type="text" id="new-image" placeholder="Nama File Gambar" required>
+      <button type="submit">Tambah</button>
+    </form>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    if (!token || role !== 'admin') {
+      alert('Akses ditolak. Anda bukan admin.');
+      window.location.href = 'login.html';
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    // Fetch Users
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(users => {
+        const userTable = document.querySelector('#user-table tbody');
+        users.forEach(u => {
+          userTable.innerHTML += `<tr><td>${u.name}</td><td>${u.email}</td></tr>`;
+        });
+      });
+
+    // Load Products
+    function loadProducts() {
+      fetch('/api/products')
+        .then(res => res.json())
+        .then(products => {
+          const table = document.querySelector('#product-table tbody');
+          table.innerHTML = '';
+          products.forEach(p => {
+            const row = `
+              <tr>
+                <td><input value="${p.name}" data-id="${p.id}" class="edit-name" /></td>
+                <td><input type="number" value="${p.price}" data-id="${p.id}" class="edit-price" /></td>
+                <td><img src="${p.image_url}" width="60"/></td>
+                <td>
+                  <button class="action btn-edit" onclick="updateProduct(${p.id})">Simpan</button>
+                  <button class="action btn-delete" onclick="deleteProduct(${p.id})">Hapus</button>
+                </td>
+              </tr>`;
+            table.insertAdjacentHTML('beforeend', row);
+          });
+        });
+    }
+
+    // Tambah produk
+    document.getElementById('add-product-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('new-name').value;
+      const price = parseInt(document.getElementById('new-price').value);
+      const image = document.getElementById('new-image').value;
+
+      fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, price, image })
+      })
+      .then(res => res.json())
+      .then(() => {
+        alert('Produk ditambahkan');
+        loadProducts();
+        document.getElementById('add-product-form').reset();
+      });
+    });
+
+    // Edit produk
+    function updateProduct(id) {
+      const name = document.querySelector(`.edit-name[data-id="${id}"]`).value;
+      const price = document.querySelector(`.edit-price[data-id="${id}"]`).value;
+
+      fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, price })
+      }).then(() => {
+        alert('Produk diperbarui');
+        loadProducts();
+      });
+    }
+
+    // Hapus produk
+    function deleteProduct(id) {
+      if (!confirm('Yakin ingin menghapus produk ini?')) return;
+
+      fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: 'Bearer ' + token
+        }
+      }).then(() => {
+        alert('Produk dihapus');
+        loadProducts();
+      });
+    }
+
+    // Load pertama kali
+    loadProducts();
+  </script>
+</body>
+</html>

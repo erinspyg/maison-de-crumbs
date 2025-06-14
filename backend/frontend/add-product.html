@@ -1,0 +1,37 @@
+<!-- public/add-product.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tambah Produk</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>Tambah Produk Baru</h1></header>
+  <form id="addForm" class="form-container">
+    <input type="text" placeholder="Nama Produk" name="name" required />
+    <input type="number" placeholder="Harga" name="price" required />
+    <input type="text" placeholder="URL Gambar" name="image" required />
+    <textarea placeholder="Deskripsi" name="description"></textarea>
+    <button type="submit">Simpan</button>
+  </form>
+  <script>
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        price: parseInt(form.price.value),
+        image: form.image.value,
+        description: form.description.value
+      };
+      await fetch('http://localhost:3000/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      window.location.href = 'admin.html';
+    });
+  </script>
+</body>
+</html>

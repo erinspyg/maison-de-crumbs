@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keranjang - Maison-De-Crumbs</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #fff8f0;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #b37000;
+    }
+    .cart-container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .cart-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+      padding: 1rem 0;
+    }
+    .cart-item img {
+      width: 80px;
+      border-radius: 8px;
+    }
+    .item-details {
+      flex: 1;
+      margin-left: 1rem;
+    }
+    .item-name {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .item-price {
+      color: #999;
+    }
+    .item-qty {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .total {
+      text-align: right;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .checkout-btn {
+      display: block;
+      margin: 2rem auto 0;
+      padding: 0.8rem 2rem;
+      background-color: #f8b500;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .checkout-btn:hover {
+      background-color: #dca700;
+    }
+  </style>
+</head>
+<body>
+  <div class="cart-container">
+    <h1>Keranjang Anda</h1>
+    <div id="cart-items"></div>
+    <div class="total" id="total"></div>
+    <button class="checkout-btn" onclick="checkout()">Checkout</button>
+  </div>
+
+  <script>
+    if (!localStorage.getItem('token')) {
+      alert('Silakan login terlebih dahulu.');
+      window.location.href = 'login.html';
+    }
+
+    async function fetchCart() {
+      const res = await fetch('/api/cart', {
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
+      });
+
+      const data = await res.json();
+      const container = document.getElementById('cart-items');
+      const totalDiv = document.getElementById('total');
+
+      container.innerHTML = '';
+      let total = 0;
+
+      if (!data.length) {
+        container.innerHTML = '<p style="text-align:center;">Keranjang kosong.</p>';
+        totalDiv.innerHTML = '';
+        return;
+      }
+
+      data.forEach(item => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+
+        const el = document.createElement('div');
+        el.className = 'cart-item';
+        el.innerHTML = `
+          <img src="${item.image_url}" alt="${item.name}">
+          <div class="item-details">
+            <div class="item-name">${item.name}</div>
+            <div class="item-qty">Jumlah: ${item.quantity}</div>
+          </div>
+          <div class="item-price">Rp${subtotal.toLocaleString()}</div>
+        `;
+        container.appendChild(el);
+      });
+
+      totalDiv.innerText = `Total: Rp${total.toLocaleString()}`;
+    }
+
+    async function checkout() {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
+      });
+      const data = await res.json();
+      alert(data.message);
+      fetchCart();
+    }
+
+    fetchCart();
+  </script>
+</body>
+</html>
