@@ -142,14 +142,18 @@
     }
 
     // Fetch Users
-    fetch('/api/users')
-      .then(res => res.json())
-      .then(users => {
-        const userTable = document.querySelector('#user-table tbody');
-        users.forEach(u => {
-          userTable.innerHTML += `<tr><td>${u.name}</td><td>${u.email}</td></tr>`;
-        });
+    fetch('/api/users', {
+      headers: {
+        Authorization: 'Bearer ' + token
+      }
+    })
+    .then(res => res.json())
+    .then(users => {
+      const userTable = document.querySelector('#user-table tbody');
+      users.forEach(u => {
+        userTable.innerHTML += `<tr><td>${u.name}</td><td>${u.email}</td></tr>`;
       });
+    });
 
     // Load Products
     function loadProducts() {

@@ -74,26 +74,41 @@
 
   <script>
     const form = document.getElementById('register-form');
+    const BASE_URL = 'https://maison-de-crumbs-production.up.railway.app';
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
-      const res = await fetch('http://localhost:3000/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password })
-      });
+      if (!name || !email || !password) {
+        alert('Mohon isi semua field.');
+        return;
+      }
 
-      const result = await res.json();
-      if (res.ok) {
-        alert('Registrasi berhasil! Silakan login.');
-        window.location.href = 'login.html';
-      } else {
-        alert(result.message || 'Registrasi gagal.');
+      try {
+        const res = await fetch(`${BASE_URL}/api/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          alert('Registrasi berhasil! Silakan login.');
+          window.location.href = 'login.html';
+        } else {
+          alert(result.message || 'Registrasi gagal.');
+          console.warn('⚠️ Respon backend:', result);
+        }
+      } catch (error) {
+        console.error('❌ Error:', error);
+        alert('Gagal menghubungi server. Coba lagi nanti.');
       }
     });
   </script>

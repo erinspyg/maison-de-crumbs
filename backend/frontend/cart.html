@@ -80,15 +80,17 @@
   </div>
 
   <script>
-    if (!localStorage.getItem('token')) {
-      alert('Silakan login terlebih dahulu.');
-      window.location.href = 'login.html';
-    }
-
     async function fetchCart() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Silakan login terlebih dahulu.');
+        window.location.href = 'login.html';
+        return;
+      }
+
       const res = await fetch('/api/cart', {
         headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          'Authorization': 'Bearer ' + token
         }
       });
 
@@ -137,7 +139,7 @@
       fetchCart();
     }
 
-    fetchCart();
+    document.addEventListener('DOMContentLoaded', fetchCart);
   </script>
 </body>
 </html>

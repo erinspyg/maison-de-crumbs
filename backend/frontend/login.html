@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login - Maison-De-Crumbs</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
@@ -88,6 +86,8 @@
   </div>
 
   <script>
+    const BASE_URL = 'https://maison-de-crumbs-production.up.railway.app'; // Ganti ke domain hosting-mu
+
     async function login(e) {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
@@ -96,7 +96,7 @@
       errorDiv.textContent = '';
 
       try {
-        const res = await fetch('/api/login', {
+        const res = await fetch(`${BASE_URL}/api/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -104,24 +104,20 @@
 
         const data = await res.json();
 
-        if (data.token) {
+        if (res.ok && data.token) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.role);
 
           alert('Login berhasil!');
-
-          if (data.role === 'admin') {
-            window.location.href = 'admin-dashboard.html';
-          } else {
-            window.location.href = 'index.html';
-          }
+          window.location.href = data.role === 'admin' ? 'admin-dashboard.html' : 'index.html';
 
         } else {
           errorDiv.textContent = data.message || 'Email atau password salah.';
         }
+
       } catch (err) {
         console.error('Login error:', err);
-        errorDiv.textContent = 'Gagal login. Pastikan backend berjalan.';
+        errorDiv.textContent = 'Tidak dapat menghubungi server. Periksa koneksi dan backend.';
       }
     }
   </script>

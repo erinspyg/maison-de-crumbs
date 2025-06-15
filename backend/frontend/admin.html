@@ -41,8 +41,18 @@
   </section>
 
   <script>
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    if (!token || role !== 'admin') {
+      alert('Akses hanya untuk admin.');
+      window.location.href = 'login.html';
+    }
+
     // Ambil data user
-    fetch('http://localhost:3000/api/users')
+    fetch('/api/users', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
       .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector("#user-table tbody");
@@ -53,23 +63,27 @@
       });
 
     // Ambil data produk
-    fetch('http://localhost:3000/api/products')
+    fetch('/api/products', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
       .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector("#product-table tbody");
         data.forEach(p => {
-          const row = `<tr><td>${p.id}</td><td>${p.name}</td><td>Rp ${p.price}</td></tr>`;
+          const row = `<tr><td>${p.id}</td><td>${p.name}</td><td>Rp ${p.price.toLocaleString('id-ID')}</td></tr>`;
           tbody.innerHTML += row;
         });
       });
 
-    // Ambil data keranjang
-    fetch('http://localhost:3000/api/cart')
+    // Ambil data keranjang (opsional - tergantung endpoint /api/cart untuk admin)
+    fetch('/api/cart', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
       .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector("#cart-table tbody");
         data.forEach(item => {
-          const row = `<tr><td>${item.user_id}</td><td>${item.product_name}</td><td>${item.quantity}</td></tr>`;
+          const row = `<tr><td>${item.user_id || '-'}</td><td>${item.name}</td><td>${item.quantity}</td></tr>`;
           tbody.innerHTML += row;
         });
       });

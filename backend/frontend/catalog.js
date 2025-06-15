@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const catalogContainer = document.getElementById('catalog-container');
 
+  catalogContainer.innerHTML = "<p>Loading produk...</p>";
+
   fetch('/api/products')
     .then(res => {
       if (!res.ok) throw new Error('Gagal ambil data produk');
@@ -20,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
           <img src="${product.image_url}" alt="${product.name}" loading="lazy">
           <h3>${product.name}</h3>
-          <p><strong>Rp${product.price.toLocaleString('id-ID')}</strong></p>
+          <p><strong>Rp${Number(product.price || 0).toLocaleString('id-ID')}</strong></p>
           <button class="buy-btn" data-id="${product.id}">Beli</button>
         `;
         catalogContainer.appendChild(card);
@@ -49,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
               alert(data.message || 'Berhasil ditambahkan ke keranjang!');
+              button.textContent = '✅ Ditambahkan';
+              button.disabled = true;
+              button.style.backgroundColor = '#ccc';
             })
             .catch(err => {
               console.error('❌ Gagal menambahkan ke keranjang:', err);
